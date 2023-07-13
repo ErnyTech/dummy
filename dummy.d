@@ -5,6 +5,10 @@
 
 import gcc.attributes : register, always_inline;
 
+version (ARM_Thumb) {
+    static assert(0, "ARM Thumb mode not supported.");
+}
+
 version (X86) {
     alias clong = int;  // long == 32 bit
     enum YIELD = 158;
@@ -35,8 +39,6 @@ version (X86) {
     enum PPOLL = 73;
     enum NANOSLEEP = 101;
     enum HAVE_PAUSE = false;
-} else version (ARM_Thumb) {
-    static assert(0, "ARM Thumb mode not supported.");
 } else {
     static assert(0, "CPU architecture not supported.");
 }
