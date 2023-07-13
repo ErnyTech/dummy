@@ -29,6 +29,12 @@ version (X86) {
     enum PPOLL = 73;
     enum NANOSLEEP = 101;
     enum HAVE_PAUSE = false;
+} else version (PPC64) {
+    alias clong = long; // long == 64 bit
+    enum YIELD = 158;
+    enum PAUSE = 29;
+    enum NANOSLEEP = 162;
+    enum HAVE_PAUSE = true;
 } else version (RISCV64) {
     alias clong = long; // long == 64 bit
     enum YIELD = 124;
@@ -109,6 +115,18 @@ clong syscall0(clong num) @always_inline {
             : "=r" (_arg1)
             : "r" (_num)
             : "memory", "cc";
+        }
+
+        return _arg1;
+    } else version (PPC64) {
+        @register("r0") clong _num = num;
+        @register("r3") clong _arg1 = void;
+
+        asm {
+            "sc ; bns+ 1f ; neg %1, %1 ; 1:"
+            : "=r" (_arg1)
+              "+r" (num)
+            :: "memory", "cr0", "r4", "r5", "r6", "r7", "r8", "r9", "r10", "r11", "r12";
         }
 
         return _arg1;
@@ -208,6 +226,18 @@ clong syscall1(clong num, clong arg1) @always_inline {
             : "r" (_arg1),
               "r"(_num)
             : "memory", "cc";
+        }
+
+        return _arg1;
+    } else version (PPC64) {
+        @register("r0") clong _num = num;
+        @register("r3") clong _arg1 = arg1;
+
+        asm {
+            "sc ; bns+ 1f ; neg %1, %1 ; 1:"
+            : "+r" (_arg1)
+              "+r" (num)
+            :: "memory", "cr0", "r4", "r5", "r6", "r7", "r8", "r9", "r10", "r11", "r12";
         }
 
         return _arg1;
@@ -323,6 +353,21 @@ clong syscall4(clong num, clong arg1, clong arg2, clong arg3, clong arg4) @alway
             : "r" (_arg1), "r" (_arg2), "r" (_arg3), "r" (_arg4),
               "r" (_num)
             : "memory", "cc";
+        }
+
+        return _arg1;
+    } else version (PPC64) {
+        @register("r0") clong _num = num;
+        @register("r3") clong _arg1 = arg1;
+        @register("r4") clong _arg2 = arg2;
+        @register("r5") clong _arg3 = arg3;
+        @register("r6") clong _arg4 = arg4;
+
+        asm {
+            "sc ; bns+ 1f ; neg %1, %1 ; 1:"
+            : "+r" (_arg1), "+r" (_arg2), "+r" (_arg3), "+r" (_arg4)
+              "+r" (num)
+            :: "memory", "cr0", "r7", "r8", "r9", "r10", "r11", "r12";
         }
 
         return _arg1;
