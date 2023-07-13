@@ -5,7 +5,13 @@
 
 import gcc.attributes : register, always_inline;
 
-version (X86_64) {
+version (X86) {
+    alias clong = int;  // long == 32 bit
+    enum YIELD = 158;
+    enum PAUSE = 29;
+    enum NANOSLEEP = 162;
+    enum HAVE_PAUSE = true;
+} else version (X86_64) {
     alias clong = long; // long == 64bit
     enum YIELD = 24;
     enum PAUSE = 34;
@@ -30,7 +36,19 @@ version (X86_64) {
 }
 
 clong syscall0(clong num) @always_inline {
-    version (X86_64) {
+    version (X86) {
+        clong ret = void;
+        @register("eax") clong _num = num;
+
+        asm {
+            "int $0x80"
+            : "=a" (ret)
+            : "0" (_num)
+            : "memory", "cc";
+        }
+
+        return ret;
+    } else version (X86_64) {
         clong ret = void;
         @register("rax") clong _num = num;
 
@@ -71,7 +89,21 @@ clong syscall0(clong num) @always_inline {
 }
 
 clong syscall1(clong num, clong arg1) @always_inline {
-    version (X86_64) {
+    version (X86) {
+        clong ret = void;
+        @register("eax") clong _num = num;
+        @register("ebx") clong _arg1 = arg1;
+
+        asm {
+            "int $0x80"
+            : "=a" (ret)
+            : "r" (_arg1),
+              "0" (_num)
+            : "memory", "cc";
+        }
+
+        return ret;
+    } else version (X86_64) {
         clong ret = void;
         @register("rax") clong _num = num;
         @register("rdi") clong _arg1 = arg1;
@@ -115,7 +147,24 @@ clong syscall1(clong num, clong arg1) @always_inline {
 }
 
 clong syscall4(clong num, clong arg1, clong arg2, clong arg3, clong arg4) @always_inline {
-    version (X86_64) {
+    version (X86) {
+        clong ret = void;
+        @register("eax") clong _num = num;
+        @register("ebx") clong _arg1 = arg1;
+        @register("ecx") clong _arg2 = arg2;
+        @register("edx") clong _arg3 = arg3;
+        @register("esi") clong _arg4 = arg4;
+
+        asm {
+            "int $0x80"
+            : "=a" (ret)
+            : "r" (_arg1), "r" (_arg2), "r" (_arg3), "r" (_arg4),
+              "0" (_num)
+            : "memory", "cc";
+        }
+
+        return ret;
+    } else version (X86_64) {
         clong ret = void;
         @register("rax") clong _num = num;
         @register("rdi") clong _arg1 = arg1;
