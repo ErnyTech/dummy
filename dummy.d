@@ -5,10 +5,6 @@
 
 import gcc.attributes : register, always_inline;
 
-version (ARM_Thumb) {
-    static assert(0, "ARM Thumb mode not supported.");
-}
-
 version (X86) {
     alias clong = int;  // long == 32 bit
     enum YIELD = 158;
@@ -74,6 +70,23 @@ clong syscall0(clong num) @always_inline {
         }
 
         return ret;
+    } else version (ARM_Thumb) {
+        @register("r6") clong _num = num;
+        @register("r0") clong _arg1 = void;
+
+        asm {
+            "eor r7, r6";
+            "eor r6, r7";
+            "eor r7, r6";
+            "svc #0";
+            "mov r7, r6"
+            : "=r"(_arg1), "=r"(_num)
+            : "r"(_arg1),
+              "r"(_num)
+            : "memory", "cc", "lr";
+        }
+
+        return _arg1;
     } else version (ARM) {
         @register("r7") clong _num = num;
         @register("r0") clong _arg1 = void;
@@ -155,6 +168,23 @@ clong syscall1(clong num, clong arg1) @always_inline {
         }
 
         return ret;
+    } else version (ARM_Thumb) {
+        @register("r6") clong _num = num;
+        @register("r0") clong _arg1 = arg1;
+
+        asm {
+            "eor r7, r6";
+            "eor r6, r7";
+            "eor r7, r6";
+            "svc #0";
+            "mov r7, r6"
+            : "=r"(_arg1), "=r"(_num)
+            : "r"(_arg1),
+              "r"(_num)
+            : "memory", "cc", "lr";
+        }
+
+        return _arg1;
     } else version (ARM) {
         @register("r7") clong _num = num;
         @register("r0") clong _arg1 = arg1;
@@ -244,6 +274,26 @@ clong syscall4(clong num, clong arg1, clong arg2, clong arg3, clong arg4) @alway
         }
 
         return ret;
+    } else version (ARM_Thumb) {
+        @register("r6") clong _num = num;
+        @register("r0") clong _arg1 = arg1;
+        @register("r1") clong _arg2 = arg2;
+        @register("r2") clong _arg3 = arg3;
+        @register("r3") clong _arg4 = arg4;
+
+        asm {
+            "eor r7, r6";
+            "eor r6, r7";
+            "eor r7, r6";
+            "svc #0";
+            "mov r7, r6"
+            : "=r"(_arg1), "=r"(_num)
+            : "r" (_arg1), "r" (_arg2), "r" (_arg3), "r" (_arg4),
+              "r"(_num)
+            : "memory", "cc", "lr";
+        }
+
+        return _arg1;
     } else version (ARM) {
         @register("r7") clong _num = num;
         @register("r0") clong _arg1 = arg1;
