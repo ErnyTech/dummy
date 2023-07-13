@@ -1,7 +1,7 @@
 # Copyright Ernesto Castellotti <ernesto@castellotti.net>
 # SPDX-License-Identifier: GPL-3.0-only
 
-FROM debian:trixie-slim AS builder
+FROM debian:sid-slim AS builder
 MAINTAINER Ernesto Castellotti <mail@ernestocastellotti.it>
 
 RUN apt-get update && apt-get install -y gdc-13

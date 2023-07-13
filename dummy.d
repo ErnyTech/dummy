@@ -29,6 +29,12 @@ version (X86) {
     enum PPOLL = 73;
     enum NANOSLEEP = 101;
     enum HAVE_PAUSE = false;
+} else version (RISCV64) {
+    alias clong = long; // long == 64 bit
+    enum YIELD = 124;
+    enum PPOLL = 73;
+    enum NANOSLEEP = 101;
+    enum HAVE_PAUSE = false;
 } else version (ARM_Thumb) {
     static assert(0, "ARM Thumb mode not supported.");
 } else {
@@ -79,6 +85,18 @@ clong syscall0(clong num) @always_inline {
 
         asm {
             "svc #0"
+            : "=r" (_arg1)
+            : "r" (_num)
+            : "memory", "cc";
+        }
+
+        return _arg1;
+    } else version (RISCV64) {
+        @register("a7") clong _num = num;
+        @register("a0") clong _arg1 = void;
+
+        asm {
+            "ecall"
             : "=r" (_arg1)
             : "r" (_num)
             : "memory", "cc";
@@ -137,6 +155,19 @@ clong syscall1(clong num, clong arg1) @always_inline {
         asm {
             "svc #0"
             : "=r" (_arg1)
+            : "r" (_arg1),
+              "r"(_num)
+            : "memory", "cc";
+        }
+
+        return _arg1;
+    } else version (RISCV64) {
+        @register("a7") clong _num = num;
+        @register("a0") clong _arg1 = arg1;
+
+        asm {
+            "ecall"
+            : "+r" (_arg1)
             : "r" (_arg1),
               "r"(_num)
             : "memory", "cc";
@@ -207,6 +238,22 @@ clong syscall4(clong num, clong arg1, clong arg2, clong arg3, clong arg4) @alway
         asm {
             "svc #0"
             : "=r" (_arg1)
+            : "r" (_arg1), "r" (_arg2), "r" (_arg3), "r" (_arg4),
+              "r" (_num)
+            : "memory", "cc";
+        }
+
+        return _arg1;
+    } else version (RISCV64) {
+        @register("a7") clong _num = num;
+        @register("a0") clong _arg1 = arg1;
+        @register("a1") clong _arg2 = arg2;
+        @register("a2") clong _arg3 = arg3;
+        @register("a3") clong _arg4 = arg4;
+
+        asm {
+            "ecall"
+            : "+r" (_arg1)
             : "r" (_arg1), "r" (_arg2), "r" (_arg3), "r" (_arg4),
               "r" (_num)
             : "memory", "cc";
