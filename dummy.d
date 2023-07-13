@@ -39,6 +39,12 @@ version (X86) {
     enum PPOLL = 73;
     enum NANOSLEEP = 101;
     enum HAVE_PAUSE = false;
+} else version (SystemZ) {
+    alias clong = long; // long == 64 bit
+    enum YIELD = 158;
+    enum PAUSE = 29;
+    enum NANOSLEEP = 162;
+    enum HAVE_PAUSE = true;
 } else {
     static assert(0, "CPU architecture not supported.");
 }
@@ -99,6 +105,18 @@ clong syscall0(clong num) @always_inline {
 
         asm {
             "ecall"
+            : "=r" (_arg1)
+            : "r" (_num)
+            : "memory", "cc";
+        }
+
+        return _arg1;
+    } else version (SystemZ) {
+        @register("r1") clong _num = num;
+        @register("r2") clong _arg1 = void;
+
+        asm {
+            "svc 0"
             : "=r" (_arg1)
             : "r" (_num)
             : "memory", "cc";
@@ -172,6 +190,18 @@ clong syscall1(clong num, clong arg1) @always_inline {
             : "+r" (_arg1)
             : "r" (_arg1),
               "r"(_num)
+            : "memory", "cc";
+        }
+
+        return _arg1;
+    } else version (SystemZ) {
+        @register("r1") clong _num = num;
+        @register("r2") clong _arg1 = arg1;
+
+        asm {
+            "svc 0"
+            : "+r" (_arg1)
+            : "r" (_num)
             : "memory", "cc";
         }
 
@@ -258,6 +288,22 @@ clong syscall4(clong num, clong arg1, clong arg2, clong arg3, clong arg4) @alway
             : "+r" (_arg1)
             : "r" (_arg1), "r" (_arg2), "r" (_arg3), "r" (_arg4),
               "r" (_num)
+            : "memory", "cc";
+        }
+
+        return _arg1;
+    } else version (SystemZ) {
+        @register("r1") clong _num = num;
+        @register("r2") clong _arg1 = arg1;
+        @register("r3") clong _arg2 = arg2;
+        @register("r4") clong _arg3 = arg3;
+        @register("r5") clong _arg4 = arg4;
+
+        asm {
+            "svc 0"
+            : "+r" (_arg1)
+            :  "r" (_arg1), "r" (_arg2), "r" (_arg3), "r" (_arg4),
+               "r" (_num)
             : "memory", "cc";
         }
 
